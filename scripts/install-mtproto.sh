@@ -90,7 +90,9 @@ fi
 systemctl enable --now docker >/dev/null
 
 docker container inspect "$NAME" >/dev/null 2>&1 && die "Контейнер $NAME уже существует"
-ss -H -ltn "( sport = :$PORT )" | grep -q . && die "Порт $PORT занят" || true
+if ss -H -ltn "( sport = :$PORT )" | grep -q .; then
+  die "Порт $PORT занят"
+fi
 
 if [[ -z "$PUBLIC_IP" ]]; then
   log "Определяю публичный IPv4"
@@ -108,7 +110,7 @@ log "Загружаю образ MTG v2"
 docker pull "$IMAGE" >/dev/null
 
 log "Генерирую уникальный секрет FakeTLS"
-SECRET="$(docker run --rm --entrypoint /mtg "$IMAGE" generate-secret --hex "$DOMAIN" | tr -d '\r\n')"
+SECRET="$(docker run --rm "$IMAGE" generate-secret --hex "$DOMAIN" | tr -d '\r\n')"
 [[ "$SECRET" =~ ^ee[0-9a-fA-F]+$ ]] || die "Неожиданный формат секрета; установка остановлена"
 
 # Fail closed: never overwrite a previous install directory.
@@ -136,8 +138,8 @@ if ((OPEN_UFW)) && command -v ufw >/dev/null 2>&1 && ufw status | grep -q '^Stat
 fi
 
 log "Проверяю прослушивание TCP порта"
-if ! ss -H -ltn "( sport = :$PORT )" | grep -q .; then
-  die "Контейнер запущен, но публичный порт не слушается; проверь Docker"
+if ! docker port "$NAME" 3128/tcp | grep -q ":${PORT}$"; then
+  die "Контейнер запущен, но Docker не опубликовал нужный порт; проверь docker port $NAME"
 fi
 
 LINK="tg://proxy?server=${PUBLIC_IP}&port=${PORT}&secret=${SECRET}"
