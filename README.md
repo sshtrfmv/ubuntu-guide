@@ -11,6 +11,28 @@
 
 ## Быстрая установка MTProto
 
+### На чистом Ubuntu VPS — одной командой
+
+Команда загружает установщик из **этого репозитория** и запускает его от root. Перед запуском на сервере, которому доверяете, рекомендуем ознакомиться с [исходным кодом](scripts/install-mtproto.sh). Используйте её **только на новом VPS**, а не на сервере с уже настроенным MTG:
+
+```bash
+installer="$(mktemp)" && curl -fsSL https://raw.githubusercontent.com/sshtrfmv/ubuntu-guide/main/scripts/install-mtproto.sh -o "$installer" && sudo bash "$installer"; rm -f "${installer:-}"
+```
+
+Скрипт выведет две готовые ссылки — `tg://proxy` и `https://t.me/proxy`. Они содержат секрет, поэтому не отправляйте их в публичные чаты или issues.
+
+Если хотите сначала проверить скачанный файл и задать параметры:
+
+```bash
+curl -fsSLo install-mtproto.sh https://raw.githubusercontent.com/sshtrfmv/ubuntu-guide/main/scripts/install-mtproto.sh
+less install-mtproto.sh
+sudo bash install-mtproto.sh --port 8443 --domain example.org
+```
+
+Проверки кода выполняет [GitHub Actions](.github/workflows/mtproto-check.yml): `bash -n`, ShellCheck и режим `--help`. Проверка **не** заменяет реальный запуск и тест подключения Telegram.
+
+### Если репозиторий уже клонирован
+
 На чистом **Ubuntu VPS**, после клонирования репозитория:
 
 ```bash
