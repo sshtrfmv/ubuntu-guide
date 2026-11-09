@@ -1,0 +1,28 @@
+name: Check MTProto installer
+
+on:
+  push:
+    paths:
+      - "scripts/**"
+      - ".github/workflows/mtproto-check.yml"
+  pull_request:
+    paths:
+      - "scripts/**"
+      - ".github/workflows/mtproto-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: Bash syntax and ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Bash syntax
+        run: bash -n scripts/install-mtproto.sh
+      - name: Run ShellCheck
+        run: shellcheck --severity=warning scripts/install-mtproto.sh
+      - name: Check safe help mode
+        run: bash scripts/install-mtproto.sh --help
